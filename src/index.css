@@ -1,0 +1,41 @@
+@import url('https://fonts.googleapis.com/css2?family=Itim&display=swap');
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Itim', sans-serif;
+}
+
+html {
+  font-size: 20px;
+}
+
+body {
+  background: #0a0a0a;
+  color: #ffffff;
+  min-height: 100vh;
+}
+
+h1 { font-size: 3rem;    color: #ffffff; }
+h2 { font-size: 2rem;    color: #ffffff; }
+h3 { font-size: 1.5rem;  color: #ffffff; }
+p  { font-size: 1.25rem; color: #888888; }
+small { font-size: 1rem; color: #444444; }
+
+.card {
+  background: #141414;
+  border: 1px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 28px;
+}
+
+.card.active {
+  background: #166534;
+  border-color: #16a34a;
+}
+
+.card.inactive {
+  background: #1f1f1f;
+  border-color: #2a2a2a;
+}
