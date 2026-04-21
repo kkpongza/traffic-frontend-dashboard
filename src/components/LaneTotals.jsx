@@ -1,7 +1,7 @@
 import React from 'react';
 import { DIRECTION_LABEL } from '../constants/phases';
 
-const DIRS = ['N', 'S', 'E', 'W'];
+const DIRS = ['N', 'E', 'S', 'W'];
 
 const styles = {
   grid: {

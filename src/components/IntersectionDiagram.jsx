@@ -244,12 +244,12 @@ export function IntersectionDiagram({ lightStates }) {
             transition={{ delay: 0.3 }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '12px', height: '2px', background: '#00ff88' }} />
+              <div style={{ width: '12px', height: '3px', background: '#00ff88' }} />
               <span style={{ color: '#6b7aa1', fontFamily: 'monospace' }}>Straight/Left</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '12px', height: '2px', background: '#00ff88', opacity: 0.6, borderTop: '1px dashed #00ff88' }} />
-              <span style={{ color: '#6b7aa1', fontFamily: 'monospace' }}>Right (Free)</span>
+              <div style={{ width: '12px', height: '1px', background: '#00ff88', opacity: 0.6, borderTop: '1px dashed #00ff88' }} />
+              <span style={{ color: '#6b7aa1', fontFamily: 'monospace' }}>Left (Free)</span>
             </div>
           </motion.div>
         )}

@@ -1,7 +1,9 @@
 import React from 'react';
 import { useDashboard } from '../hooks/useDashboard';
+import { useCamera } from '../hooks/useCamera';
 import PhaseInfo from '../components/PhaseInfo';
 import DecisionReason from '../components/DecisionReason';
+import VehicleCount from '../components/VehicleCount';
 
 const styles = {
   page: {
@@ -118,6 +120,7 @@ function PhaseTabs({ currentPhase, laneTotals }) {
 
 export default function DashboardPage({ onLogout }) {
   const { status, connectionState } = useDashboard(true);
+  const { cameraData } = useCamera(true);
 
   const laneTotals = status?.lastDecision?.meta?.laneTotals;
 
@@ -150,7 +153,13 @@ export default function DashboardPage({ onLogout }) {
         )}
       </section>
 
-      {/* Section 3: Decision Reason */}
+      {/* Section 3: Vehicle Count by Lane */}
+      <section>
+        <div style={{ ...styles.sectionTitle, marginBottom: '12px' }}>จำนวนรถสดจากกล้อง</div>
+        <VehicleCount cameraData={cameraData} currentPhase={status?.currentPhase} />
+      </section>
+
+      {/* Section 4: Decision Reason */}
       <section>
         <div style={styles.sectionTitle}>เหตุผลการตัดสินใจ</div>
         <DecisionReason

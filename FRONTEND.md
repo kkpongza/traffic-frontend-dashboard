@@ -180,10 +180,10 @@ const { data } = await res.json();
 
 ---
 
-### 3. `GET /dashboard/stream` — SSE Live Updates
+### 3. `GET /dashboard/stream` — SSE Live Updates (เฟส)
 
 - **Auth:** JWT cookie (ส่งอัตโนมัติ)
-- **ใช้เมื่อ:** หลัง snapshot load แล้ว — รับ event ทุกครั้งที่มีการตัดสินใจเฟสใหม่
+- **ใช้เมื่อ:** หลัง snapshot load แล้ว — รับ event ทุกครั้งที่มีการตัดสินใจเฟสใหม่ (~30+ วินาที)
 
 ```js
 const source = new EventSource(`${API_URL}/dashboard/stream`, {
@@ -204,6 +204,87 @@ return () => source.close();
 ```
 
 > Server ส่ง event ทันทีเมื่อ connect (initial state) และส่งอีกครั้งทุกครั้งที่มี decision ใหม่
+
+---
+
+### 4. `GET /dashboard/camera` — ดึงข้อมูลกล้องล่าสุด (Snapshot)
+
+- **Auth:** JWT cookie (ส่งอัตโนมัติหลัง login)
+- **ใช้เมื่อ:** โหลดหน้าครั้งแรก ก่อนเปิด camera SSE stream
+
+```js
+const res = await fetch(`${API_URL}/dashboard/camera`, {
+  credentials: 'include',
+});
+const { data } = await res.json();
+```
+
+**Response:**
+
+```json
+{
+  "ok": true,
+  "data": {
+    "intersectionId": "INT-001",
+    "cameraId": "CAM-01",
+    "timestamp": "2026-04-21T10:30:00.000Z",
+    "lanes": [
+      { "laneId": "N1", "direction": "N", "count": 7 },
+      { "laneId": "N2", "direction": "N", "count": 5 },
+      { "laneId": "E1", "direction": "E", "count": 3 },
+      { "laneId": "E2", "direction": "E", "count": 4 },
+      { "laneId": "S1", "direction": "S", "count": 6 },
+      { "laneId": "S2", "direction": "S", "count": 8 },
+      { "laneId": "W1", "direction": "W", "count": 2 },
+      { "laneId": "W2", "direction": "W", "count": 3 }
+    ],
+    "directionTotals": { "N": 12, "E": 7, "S": 14, "W": 5 }
+  }
+}
+```
+
+> `data` จะเป็น `null` ถ้ายังไม่มีข้อมูลจากกล้องเลย
+
+**Field reference:**
+- `lanes` — ข้อมูลดิบจากกล้อง แต่ละ lane แยกกัน (ยังไม่ผ่าน median filter)
+- `directionTotals` — ผลรวม count ต่อทิศ (N/E/S/W) คำนวณจาก raw lanes โดยตรง
+- `timestamp` — เวลาที่กล้องบันทึก frame นี้
+
+---
+
+### 5. `GET /dashboard/camera/stream` — SSE Raw Camera Data
+
+- **Auth:** JWT cookie (ส่งอัตโนมัติ)
+- **ใช้เมื่อ:** ต้องการแสดงจำนวนรถสดจากกล้อง — fires ทุก ~2 วินาที (ทุก MQTT tick)
+
+```js
+const source = new EventSource(`${API_URL}/dashboard/camera/stream`, {
+  withCredentials: true,
+});
+
+source.onmessage = (e) => {
+  const data = JSON.parse(e.data);
+  setCameraData(data);
+};
+
+// cleanup
+return () => source.close();
+```
+
+> Server ส่ง event ทันทีเมื่อ connect (ถ้ามีข้อมูล) และส่งอีกครั้งทุกครั้งที่กล้องส่งข้อมูลใหม่
+
+**Event payload shape เหมือนกับ `/dashboard/camera` ทุกประการ**
+
+---
+
+## ความแตกต่างระหว่าง SSE สองเส้น
+
+| | `/dashboard/stream` | `/dashboard/camera/stream` |
+|---|---|---|
+| **ข้อมูล** | สถานะเฟส + การตัดสินใจ | Raw camera counts |
+| **ความถี่** | ~30+ วินาที (ทุกครั้งที่เปลี่ยนเฟส) | ~2 วินาที (ทุก MQTT tick) |
+| **ใช้สำหรับ** | countdown, เฟสปัจจุบัน, next phase | แสดงจำนวนรถสดในแต่ละทิศ |
+| **ค่าที่ได้** | Median-filtered ผ่าน decision engine | Raw จากกล้องโดยตรง |
 
 ---
 
@@ -282,6 +363,12 @@ useEffect(() => {
 - มาจากเฟส: `from`
 - แสดง warning badge ถ้า `fallback: true` — "ไม่มีข้อมูลกล้อง ใช้ค่า default"
 
+**ส่วนที่ 4 — ข้อมูลดิบจากกล้อง (Raw Camera Data)**
+- แสดงจำนวนรถสดจาก `directionTotals` (N/E/S/W) — อัปเดตทุก ~2 วินาที
+- แสดง `timestamp` ของ frame ล่าสุดจากกล้อง
+- ข้อมูลนี้คือค่า raw ยังไม่ผ่าน median filter (ต่างจาก `laneTotals` ใน decision)
+- ใช้ `/dashboard/camera` สำหรับ initial load และ `/dashboard/camera/stream` สำหรับ live update
+
 ---
 
 ## ตัวอย่าง Component Structure
@@ -295,10 +382,12 @@ src/
 │   ├── TrafficLight.jsx      — แสดง 4 ทิศ + วงกลมไฟ
 │   ├── PhaseInfo.jsx         — เฟสปัจจุบัน + countdown
 │   ├── LaneTotals.jsx        — จำนวนรถแต่ละทิศ
-│   └── DecisionReason.jsx    — อธิบายการตัดสินใจ
+│   ├── DecisionReason.jsx    — อธิบายการตัดสินใจ
+│   └── CameraFeed.jsx        — ข้อมูลดิบจากกล้อง (raw counts, timestamp)
 ├── hooks/
 │   ├── useAuth.js            — login / logout state
-│   ├── useDashboard.js       — fetch snapshot + SSE stream
+│   ├── useDashboard.js       — fetch snapshot + SSE stream (/dashboard/stream)
+│   ├── useCamera.js          — fetch camera snapshot + SSE stream (/dashboard/camera/stream)
 │   └── useCountdown.js       — คำนวณ countdown จาก phaseStartedAt
 └── constants/
     └── phases.js             — PHASE_LABEL map
