@@ -47,12 +47,19 @@ function TrafficLight({ state, direction }) {
   );
 }
 
-export function IntersectionDiagram({ lightStates }) {
-  const activeDirection = Object.entries(lightStates).find(
-    ([_, state]) => state === 'green' || state === 'yellow'
-  )?.[0];
+const PHASE_TO_DIR = { N_GO: 'north', S_GO: 'south', E_GO: 'east', W_GO: 'west' };
 
-  const isYellowPhase = Object.values(lightStates).some((state) => state === 'yellow');
+export function IntersectionDiagram({ lightStates, currentPhase }) {
+  // Always show arrows for the active direction; fall back to currentPhase during all-red
+  const activeDirection =
+    Object.entries(lightStates).find(([_, s]) => s === 'green' || s === 'yellow')?.[0]
+    ?? (currentPhase ? PHASE_TO_DIR[currentPhase] : undefined);
+
+  const dirState = activeDirection ? lightStates[activeDirection] : null;
+  const arrowColor =
+    dirState === 'yellow' ? '#ffd93d' :
+    dirState === 'red'    ? '#ff2e63' :
+    '#00ff88';
 
   const labelStyle = {
     fontSize: '10px',
@@ -82,111 +89,111 @@ export function IntersectionDiagram({ lightStates }) {
           <line x1="220" y1="160" x2="320" y2="160" stroke="#6b7aa1" strokeWidth="2" strokeDasharray="8,8" />
 
           {/* Flow Arrows - North */}
-          {activeDirection === 'north' && !isYellowPhase && (
+          {activeDirection === 'north' && (
             <>
-              <motion.path d="M 175 60 L 175 255" stroke="#00ff88" strokeWidth="3" fill="none"
+              <motion.path d="M 175 60 L 175 255" stroke={arrowColor} strokeWidth="3" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }} />
-              <motion.polygon points="175,260 168,248 182,248" fill="#00ff88"
+              <motion.polygon points="175,260 168,248 182,248" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, duration: 0.3 }} />
 
 
-              <motion.path d="M 175 80 Q 180 140 230 140" stroke="#00ff88" strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
+              <motion.path d="M 175 80 Q 180 140 230 140" stroke={arrowColor} strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }}
                 transition={{ duration: 0.6, delay: 0.2 }} />
-              <motion.polygon points="230,140 218,134 218,146" fill="#00ff88" opacity="0.6"
+              <motion.polygon points="230,140 218,134 218,146" fill={arrowColor} opacity="0.6"
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6, duration: 0.3 }} />
 
 
-              <motion.path d="M 175 80 Q 180 170 110 180" stroke="#00ff88" strokeWidth="2" fill="none"
+              <motion.path d="M 175 80 Q 180 170 110 180" stroke={arrowColor} strokeWidth="2" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.1 }} />
-              <motion.polygon points="100,180 111,174 111,186" fill="#00ff88"
+              <motion.polygon points="100,180 111,174 111,186" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, duration: 0.3 }} />
             </>
           )}
 
           {/* Flow Arrows - South */}
-          {activeDirection === 'south' && !isYellowPhase && (
+          {activeDirection === 'south' && (
             <>
-              <motion.path d="M 145 260 L 145 65" stroke="#00ff88" strokeWidth="3" fill="none"
+              <motion.path d="M 145 260 L 145 65" stroke={arrowColor} strokeWidth="3" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }} />
-              <motion.polygon points="145,60 138,72 152,72" fill="#00ff88"
+              <motion.polygon points="145,60 138,72 152,72" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, duration: 0.3 }} />
 
 
-              <motion.path d="M 145 240 Q 150 180 100 180" stroke="#00ff88" strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
+              <motion.path d="M 145 240 Q 150 180 100 180" stroke={arrowColor} strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }}
                 transition={{ duration: 0.6, delay: 0.2 }} />
-              <motion.polygon points="100,180 112,186 112,174" fill="#00ff88" opacity="0.6"
+              <motion.polygon points="100,180 112,186 112,174" fill={arrowColor} opacity="0.6"
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 0.6, scale: 1 }}
                 transition={{ delay: 0.6, duration: 0.3 }} />
 
 
-              <motion.path d="M 145 240 Q 140 130 220 130" stroke="#00ff88" strokeWidth="2" fill="none"
+              <motion.path d="M 145 240 Q 140 130 220 130" stroke={arrowColor} strokeWidth="2" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.1 }} />
-              <motion.polygon points="223,130 211,124 211,136" fill="#00ff88"
+              <motion.polygon points="223,130 211,124 211,136" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, duration: 0.3 }} />
             </>
           )}
 
           {/* Flow Arrows - East */}
-          {activeDirection === 'east' && !isYellowPhase && (
+          {activeDirection === 'east' && (
             <>
-              <motion.path d="M 260 175 L 65 175" stroke="#00ff88" strokeWidth="3" fill="none"
+              <motion.path d="M 260 175 L 65 175" stroke={arrowColor} strokeWidth="3" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }} />
-              <motion.polygon points="60,175 72,168 72,182" fill="#00ff88"
+              <motion.polygon points="60,175 72,168 72,182" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, duration: 0.3 }} />
 
 
-              <motion.path d="M 240 175 Q 180 170 180 220" stroke="#00ff88" strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
+              <motion.path d="M 240 175 Q 180 170 180 220" stroke={arrowColor} strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }}
                 transition={{ duration: 0.6, delay: 0.2 }} />
-              <motion.polygon points="180,220 174,208 186,208" fill="#00ff88" opacity="0.6"
+              <motion.polygon points="180,220 174,208 186,208" fill={arrowColor} opacity="0.6"
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6, duration: 0.3 }} />
               
               
-              <motion.path d="M 240 175 Q 140 180 140 100" stroke="#00ff88" strokeWidth="2" fill="none"
+              <motion.path d="M 240 175 Q 140 180 140 100" stroke={arrowColor} strokeWidth="2" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.1 }} />
-              <motion.polygon points="140,95 134,107 146,107" fill="#00ff88"
+              <motion.polygon points="140,95 134,107 146,107" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, duration: 0.3 }} />
             </>
           )}
 
           {/* Flow Arrows - West */}
-          {activeDirection === 'west' && !isYellowPhase && (
+          {activeDirection === 'west' && (
             <>
-              <motion.path d="M 60 145 L 255 145" stroke="#00ff88" strokeWidth="3" fill="none"
+              <motion.path d="M 60 145 L 255 145" stroke={arrowColor} strokeWidth="3" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, ease: 'easeOut' }} />
-              <motion.polygon points="260,145 248,138 248,152" fill="#00ff88"
+              <motion.polygon points="260,145 248,138 248,152" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.4, duration: 0.3 }} />
               
               
-              <motion.path d="M 80 145 Q 140 140 140 90" stroke="#00ff88" strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
+              <motion.path d="M 80 145 Q 140 140 140 90" stroke={arrowColor} strokeWidth="2" strokeOpacity="0.6" fill="none" strokeDasharray="4,4"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 0.6 }}
                 transition={{ duration: 0.6, delay: 0.2 }} />
-              <motion.polygon points="140,85 134,97 146,97" fill="#00ff88" opacity="0.6"
+              <motion.polygon points="140,85 134,97 146,97" fill={arrowColor} opacity="0.6"
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.6, duration: 0.3 }} />
                 
-              <motion.path d="M 80 145 Q 190 150 190 230" stroke="#00ff88" strokeWidth="2" fill="none"
+              <motion.path d="M 80 145 Q 190 150 190 230" stroke={arrowColor} strokeWidth="2" fill="none"
                 initial={{ pathLength: 0, opacity: 0 }} animate={{ pathLength: 1, opacity: 1 }}
                 transition={{ duration: 0.6, delay: 0.1 }} />
-              <motion.polygon points="190,235 184,223 196,223" fill="#00ff88"
+              <motion.polygon points="190,235 184,223 196,223" fill={arrowColor}
                 initial={{ opacity: 0, scale: 0 }} animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.5, duration: 0.3 }} />
             </>
@@ -226,7 +233,7 @@ export function IntersectionDiagram({ lightStates }) {
         </div>
 
         {/* Legend */}
-        {activeDirection && !isYellowPhase && (
+        {activeDirection && (
           <motion.div
             style={{
               position: 'absolute',
@@ -244,11 +251,11 @@ export function IntersectionDiagram({ lightStates }) {
             transition={{ delay: 0.3 }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '12px', height: '3px', background: '#00ff88' }} />
+              <div style={{ width: '12px', height: '3px', background: arrowColor }} />
               <span style={{ color: '#6b7aa1', fontFamily: 'monospace' }}>Straight/Left</span>
             </div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-              <div style={{ width: '12px', height: '1px', background: '#00ff88', opacity: 0.6, borderTop: '1px dashed #00ff88' }} />
+              <div style={{ width: '12px', height: '1px', background: arrowColor, opacity: 0.6, borderTop: `1px dashed ${arrowColor}` }} />
               <span style={{ color: '#6b7aa1', fontFamily: 'monospace' }}>Left (Free)</span>
             </div>
           </motion.div>

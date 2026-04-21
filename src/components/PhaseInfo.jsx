@@ -103,7 +103,7 @@ export default function PhaseInfo({ status }) {
         </div>
         <div style={styles.label}>เวลาไฟเขียว: {status?.greenTimeSec ?? '–'} วินาที</div>
         <div style={{ marginTop: '16px' }}>
-          <IntersectionDiagram lightStates={currentLightStates} />
+          <IntersectionDiagram lightStates={currentLightStates} currentPhase={status?.currentPhase} />
         </div>
       </div>
 
