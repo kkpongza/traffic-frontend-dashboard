@@ -178,6 +178,41 @@ const { data } = await res.json();
 }
 ```
 
+**Response เมื่อใช้ MAXPRESSURE_SWITCHING_LOSS:**
+
+```json
+{
+  "ok": true,
+  "data": {
+    "intersectionId": "INT-001",
+    "currentPhase": "N_GO",
+    "nextPhase": null,
+    "greenTimeSec": 65,
+    "phaseStartedAt": "2026-04-28T10:30:00.000Z",
+    "lastDecision": {
+      "strategy": "MAXPRESSURE_SWITCHING_LOSS",
+      "phase": "N_GO",
+      "greenTimeSec": 65,
+      "meta": {
+        "from": "E_GO",
+        "laneTotals": { "N": 34, "S": 10, "E": 24, "W": 16 },
+        "chosenDir": "N",
+        "actualCars": 31,
+        "perCarRate": 2.0,
+        "sampleCount": 5,
+        "maxByDir": { "N": 31, "S": 10, "E": 24, "W": 16 },
+        "flowRates": { "N_GO": 0.5, "E_GO": 0.333, "S_GO": 0.208, "W_GO": 0.343 },
+        "pressures": { "N_GO": 15.5, "E_GO": 8.0, "S_GO": 2.08, "W_GO": 5.49 },
+        "biasedPressures": { "N_GO": 15.5, "E_GO": 9.6, "S_GO": 2.08, "W_GO": 5.49 },
+        "switchingBias": 1.2
+      }
+    }
+  }
+}
+```
+
+> `nextPhase` คือ `null` เสมอสำหรับ MAXPRESSURE — ไม่สามารถทำนายล่วงหน้าได้เพราะขึ้นอยู่กับความดันขณะตัดสินใจ
+
 ---
 
 ### 3. `GET /dashboard/stream` — SSE Live Updates (เฟส)
@@ -296,10 +331,13 @@ return () => source.close();
 | `nextPhase` | เฟสถัดไป | ทิศที่จะได้ไฟเขียวต่อไป |
 | `greenTimeSec` | เวลาไฟเขียว (วินาที) | ระยะเวลาไฟเขียวของเฟสนี้ |
 | `phaseStartedAt` | เวลาที่เริ่มเฟส | ใช้คำนวณนับถอยหลัง |
+| `currentPhase` | เฟสปัจจุบัน | ทิศที่ได้ไฟเขียวตอนนี้ เช่น `N_GO` = เหนือ |
+| `nextPhase` | เฟสถัดไป | ทิศที่จะได้ไฟเขียวต่อไป — **`null` เมื่อใช้ MAXPRESSURE_SWITCHING_LOSS** |
+| `lastDecision.strategy` | กลยุทธ์ที่ใช้ | ดูด้านล่างสำหรับ strategy-specific rendering |
 | `lastDecision.meta.laneTotals` | จำนวนรถแต่ละทิศ | `{ N, S, E, W }` = จำนวนรถที่ตรวจจับได้ |
 | `lastDecision.meta.actualCars` | รถในทิศปัจจุบัน | จำนวนรถที่ใช้ในการคำนวณ |
 | `lastDecision.meta.from` | เฟสก่อนหน้า | เพิ่งมาจากเฟสไหน |
-| `lastDecision.meta.fallback` | `true` = ไม่มีข้อมูล | แสดงเตือนว่าไม่มีข้อมูลกล้อง |
+| `lastDecision.meta.fallback` | `true` = ไม่มีข้อมูล | แสดงเตือนว่าไม่มีข้อมูลกล้อง (SIMPLE_CYCLE_BASED เท่านั้น) |
 | `lastDecision.meta.sampleCount` | จำนวน samples | ใช้กรองค่า median กี่ samples |
 
 ### การแปล Phase ID → ภาษาไทย
@@ -357,11 +395,23 @@ useEffect(() => {
 - แสดงจำนวนรถ (`laneTotals`) ใต้ชื่อทิศ ตัวเลขใหญ่
 
 **ส่วนที่ 3 — เหตุผลที่ตัดสินใจ (Decision Reason)**
+
+ใช้ `lastDecision.strategy` เพื่อเลือก render แบบที่ถูกต้อง:
+
+**SIMPLE_CYCLE_BASED / QUEUE_BASED:**
 - รถในทิศนี้: `actualCars` คัน
 - เวลาไฟเขียว: `greenTimeSec` วินาที
 - สูตรที่ใช้: `3 + (perCarRate × actualCars)`
 - มาจากเฟส: `from`
 - แสดง warning badge ถ้า `fallback: true` — "ไม่มีข้อมูลกล้อง ใช้ค่า default"
+
+**MAXPRESSURE_SWITCHING_LOSS:**
+- รถในทิศที่ชนะ (lane ที่หนาแน่นสุด): `actualCars` คัน
+- ความดัน (Pressure) ของแต่ละเฟส: `meta.pressures` — `{ N_GO, E_GO, S_GO, W_GO }`
+- ความดันหลังใส่ bias: `meta.biasedPressures` — เฟสที่กำลัง active จะถูกคูณด้วย `meta.switchingBias` (default 1.2)
+- เวลาไฟเขียว: `greenTimeSec` วินาที — คำนวณจาก `actualCars / flowRate + reactionTime`
+- มาจากเฟส: `from`
+- **`nextPhase` จะเป็น `null`** — ระบบตัดสินใจจากความดันขณะนั้น ไม่หมุนเวียนตามลำดับ
 
 **ส่วนที่ 4 — ข้อมูลดิบจากกล้อง (Raw Camera Data)**
 - แสดงจำนวนรถสดจาก `directionTotals` (N/E/S/W) — อัปเดตทุก ~2 วินาที

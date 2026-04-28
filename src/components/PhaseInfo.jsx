@@ -109,14 +109,42 @@ export default function PhaseInfo({ status }) {
 
       {/* Next Phase */}
       <div style={styles.nextCard}>
-        <div style={styles.label}>เฟสถัดไป</div>
-        <h2 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 'bold' }}>
-          {nextLabel}
-        </h2>
-        <div style={{ fontSize: '1rem', color: '#444444' }}>รอคิวถัดไป</div>
-        <div style={{ marginTop: '16px' }}>
-          <IntersectionDiagram lightStates={nextLightStates} />
-        </div>
+        {status?.nextPhase == null ? (
+          <>
+            <div style={styles.label}>เฟสถัดไป</div>
+            <h2 style={{ fontSize: '1.75rem', color: '#444444', fontWeight: 'bold', marginTop: '4px' }}>
+              Real-time
+            </h2>
+            <div style={{ fontSize: '1rem', color: '#444444', marginTop: '4px' }}>
+              ระบบตัดสินใจจาก pressure ขณะเปลี่ยนเฟส
+            </div>
+            <div style={{
+              marginTop: 'auto', paddingTop: '24px',
+              display: 'flex', flexDirection: 'column', gap: '6px',
+            }}>
+              {['N_GO','E_GO','S_GO','W_GO'].map((p) => (
+                <div key={p} style={{
+                  display: 'flex', justifyContent: 'space-between',
+                  fontSize: '0.9rem', color: '#444444',
+                }}>
+                  <span>{PHASE_LABEL[p]}</span>
+                  <span>pressure จะถูกคำนวณ ณ เวลานั้น</span>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <>
+            <div style={styles.label}>เฟสถัดไป</div>
+            <h2 style={{ fontSize: '2.5rem', color: '#ffffff', fontWeight: 'bold' }}>
+              {nextLabel}
+            </h2>
+            <div style={{ fontSize: '1rem', color: '#444444' }}>รอคิวถัดไป</div>
+            <div style={{ marginTop: '16px' }}>
+              <IntersectionDiagram lightStates={nextLightStates} />
+            </div>
+          </>
+        )}
       </div>
     </div>
   );

@@ -165,6 +165,7 @@ export default function DashboardPage({ onLogout }) {
         <DecisionReason
           lastDecision={status?.lastDecision}
           greenTimeSec={status?.greenTimeSec}
+          currentPhase={status?.currentPhase}
         />
       </section>
     </div>
